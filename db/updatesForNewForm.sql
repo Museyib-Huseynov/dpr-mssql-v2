@@ -156,12 +156,12 @@ CREATE TABLE daily_general_comments (
   id INT PRIMARY KEY IDENTITY(1,1),
   report_date_id INT NOT NULL,
   field_id INT NOT NULL,
-  platform_number INT NOT NULL,  
+  platform NVARCHAR(255) NOT NULL,  
   general_comments NVARCHAR(MAX),
   created_at DATE DEFAULT GETDATE(),
   CONSTRAINT FK_dgc_reportDateId FOREIGN KEY (report_date_id) REFERENCES dbo.report_dates(id),
   CONSTRAINT FK_dgc_fieldId FOREIGN KEY (field_id) REFERENCES dbo.fields(id),
-  CONSTRAINT UQ_dailyGeneralComments UNIQUE (field_id, platform_number, report_date_id)
+  CONSTRAINT UQ_dailyGeneralComments UNIQUE (field_id, platform, report_date_id)
 );
 GO
 --
@@ -1080,5 +1080,109 @@ VALUES
   (N'QD-4', 3, 0.86),
   (N'QA-1', 3, 0.86),
   (N'QA-3', 3, 0.86);
+GO
+--
+
+--
+DROP PROCEDURE DeleteTodayEntries;
+GO
+DROP PROCEDURE DeleteAllEntries;
+GO
+DROP PROCEDURE DeleteEntries;
+GO
+
+CREATE PROCEDURE DeleteTodayEntries
+AS
+BEGIN
+    DELETE FROM flowmeters WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM well_stock WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM completions WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM well_downtime_reasons WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM daily_well_parameters WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM well_tests WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM gas_well_tests WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM laboratory_results WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    DELETE FROM daily_general_comments WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+END;
+GO
+
+CREATE PROCEDURE DeleteAllEntries
+AS
+BEGIN
+    TRUNCATE TABLE flowmeters;
+    TRUNCATE TABLE well_stock;
+    TRUNCATE TABLE completions;
+    TRUNCATE TABLE well_downtime_reasons;
+    TRUNCATE TABLE daily_well_parameters;
+    TRUNCATE TABLE well_tests;
+    TRUNCATE TABLE gas_well_tests;
+    TRUNCATE TABLE laboratory_results;
+    TRUNCATE TABLE daily_general_comments;
+END;
+GO
+
+CREATE PROCEDURE DeleteEntries
+    @reportDate DATE,
+    @platform INT
+AS
+BEGIN
+    DECLARE @reportDateId INT;
+
+    SELECT @reportDateId = rd.id
+    FROM report_dates AS rd
+    WHERE rd.report_date = @reportDate;
+
+    DELETE flowmeters
+    FROM flowmeters
+    INNER JOIN platforms ON flowmeters.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE well_stock
+    FROM well_stock
+    INNER JOIN wells ON well_stock.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE completions
+    FROM completions
+    INNER JOIN wells ON completions.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE well_downtime_reasons
+    FROM well_downtime_reasons
+    INNER JOIN wells ON well_downtime_reasons.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE daily_well_parameters
+    FROM daily_well_parameters
+    INNER JOIN wells ON daily_well_parameters.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE well_tests
+    FROM well_tests
+    INNER JOIN wells ON well_tests.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE gas_well_tests
+    FROM gas_well_tests
+    INNER JOIN wells ON gas_well_tests.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE laboratory_results
+    FROM laboratory_results
+    INNER JOIN wells ON laboratory_results.well_id = wells.id
+    INNER JOIN platforms ON wells.platform_id = platforms.id
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+
+    DELETE daily_general_comments
+    FROM daily_general_comments
+    INNER JOIN platforms ON daily_general_comments.platform = platforms.name
+    WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
+END;
 GO
 --

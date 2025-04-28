@@ -357,72 +357,73 @@ try {
         logger.log(`${'-'.repeat(100)}`, 'INFO', true);
         const row = rows[i];
 
-        let general_comments = rows[i + 7][26];
+        if (row[2] === null) {
+          let general_comments = rows[i + 7][26];
 
-        //// populate daily_general_comments table
-        // check daily_general_comments entry exists in DB
-        const daily_general_comments_entry_exists_query =
-          'SELECT COUNT(*) AS daily_general_comments_entry_exists FROM daily_general_comments WHERE field_id=@field_id AND report_date_id=@report_date_id AND platform_number=@platform_number';
+          //// populate daily_general_comments table
+          // check daily_general_comments entry exists in DB
+          const daily_general_comments_entry_exists_query =
+            'SELECT COUNT(*) AS daily_general_comments_entry_exists FROM daily_general_comments WHERE field_id=@field_id AND report_date_id=@report_date_id AND platform_number=@platform_number';
 
-        const { recordset: daily_general_comments_entry_exists_query_result } =
-          await pool
+          const {
+            recordset: daily_general_comments_entry_exists_query_result,
+          } = await pool
             .request()
             .input('field_id', field_id)
             .input('report_date_id', report_date_id)
             .input('platform_number', platform_number)
             .query(daily_general_comments_entry_exists_query);
 
-        const { daily_general_comments_entry_exists } =
-          daily_general_comments_entry_exists_query_result[0] || {};
-        //
+          const { daily_general_comments_entry_exists } =
+            daily_general_comments_entry_exists_query_result[0] || {};
+          //
 
-        // get previous entry from daily_general_comments
-        const daily_general_comments_previous_entry_query =
-          'SELECT TOP 1 * FROM daily_general_comments WHERE field_id = @field_id AND platform_number = @platform_number AND report_date_id < @report_date_id ORDER BY report_date_id DESC';
+          // get previous entry from daily_general_comments
+          const daily_general_comments_previous_entry_query =
+            'SELECT TOP 1 * FROM daily_general_comments WHERE field_id = @field_id AND platform_number = @platform_number AND report_date_id < @report_date_id ORDER BY report_date_id DESC';
 
-        const {
-          recordset: daily_general_comments_previous_entry_query_result,
-        } = await pool
-          .request()
-          .input('field_id', field_id)
-          .input('platform_number', platform_number)
-          .input('report_date_id', report_date_id)
-          .query(daily_general_comments_previous_entry_query);
-
-        const {
-          general_comments:
-            daily_general_comments_previous_entry_general_comments,
-        } = daily_general_comments_previous_entry_query_result[0] || {};
-
-        const general_comment_changed =
-          daily_general_comments_previous_entry_general_comments !=
-          general_comments;
-        //
-
-        // insert entry into daily_general_comments table
-        const daily_general_comments_insert_query =
-          'INSERT INTO daily_general_comments (report_date_id, field_id, platform_number, general_comments) VALUES (@report_date_id, @field_id, @platform_number, @general_comments)';
-
-        if (
-          !Number(daily_general_comments_entry_exists) &&
-          general_comment_changed
-        ) {
-          await pool
+          const {
+            recordset: daily_general_comments_previous_entry_query_result,
+          } = await pool
             .request()
-            .input('report_date_id', report_date_id)
             .input('field_id', field_id)
             .input('platform_number', platform_number)
-            .input('general_comments', general_comments)
-            .query(daily_general_comments_insert_query);
-          logger.log(`|'daily_general_comments'| Populated!`, success);
-          daily_general_comments_insertion_count++;
-        } else {
-          logger.log(`|'daily_general_comments'| Already populated!`);
-        }
-        //
-        ////
+            .input('report_date_id', report_date_id)
+            .query(daily_general_comments_previous_entry_query);
 
-        if (row[2] === null) {
+          const {
+            general_comments:
+              daily_general_comments_previous_entry_general_comments,
+          } = daily_general_comments_previous_entry_query_result[0] || {};
+
+          const general_comment_changed =
+            daily_general_comments_previous_entry_general_comments !=
+            general_comments;
+          //
+
+          // insert entry into daily_general_comments table
+          const daily_general_comments_insert_query =
+            'INSERT INTO daily_general_comments (report_date_id, field_id, platform_number, general_comments) VALUES (@report_date_id, @field_id, @platform_number, @general_comments)';
+
+          if (
+            !Number(daily_general_comments_entry_exists) &&
+            general_comment_changed
+          ) {
+            await pool
+              .request()
+              .input('report_date_id', report_date_id)
+              .input('field_id', field_id)
+              .input('platform_number', platform_number)
+              .input('general_comments', general_comments)
+              .query(daily_general_comments_insert_query);
+            logger.log(`|'daily_general_comments'| Populated!`, success);
+            daily_general_comments_insertion_count++;
+          } else {
+            logger.log(`|'daily_general_comments'| Already populated!`);
+          }
+          //
+          ////
+
           let errors = [
             rows[i + 7][6],
             rows[i + 8][6],
@@ -1245,6 +1246,13 @@ try {
     true
   );
   logger.log(
+    `${gas_well_tests_insertion_count
+      .toString()
+      .padStart(6)}\t\trow(s) inserted into |'gas_well_tests'|`,
+    'INFO',
+    true
+  );
+  logger.log(
     `${daily_well_parameters_insertion_count
       .toString()
       .padStart(6)}\t\trow(s) inserted into |'daily_well_parameters'|`,
@@ -1262,6 +1270,13 @@ try {
     `${laboratory_results_insertion_count
       .toString()
       .padStart(6)}\t\trow(s) inserted into |'laboratory_results'|`,
+    'INFO',
+    true
+  );
+  logger.log(
+    `${daily_general_comments_insertion_count
+      .toString()
+      .padStart(6)}\t\trow(s) inserted into |'daily_general_comments'|`,
     'INFO',
     true
   );
