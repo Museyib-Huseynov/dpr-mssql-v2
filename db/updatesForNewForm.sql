@@ -213,17 +213,17 @@ SELECT
   ROUND(wt.liquid_ton, 0) AS liquid_ton,
   ROUND(lr.water_cut, 1) AS water_cut,
   CASE
-      WHEN f.name <> 'SWG' THEN wt.oil_ton
+      WHEN f.name <> 'Günəşli' THEN wt.oil_ton
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
   END AS oil_ton,
   CASE 
-      WHEN f.name <> 'SWG' THEN wt.oil_ton * (24 - dwp.well_uptime_hours) / 24
+      WHEN f.name <> 'Günəşli' THEN wt.oil_ton * (24 - dwp.well_uptime_hours) / 24
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND((wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100))) * (24 - dwp.well_uptime_hours) / 24, 0)
   END AS oil_loss_ton,
   CASE
-      WHEN f.name <> 'SWG' THEN wt.water_ton
+      WHEN f.name <> 'Günəşli' THEN wt.water_ton
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND(wt.liquid_ton * (lr.water_cut / 100) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
   END AS water_ton,
@@ -350,7 +350,7 @@ GO
 
 --
 UPDATE fields
-set name = N'Gunəşli'
+set name = N'Günəşli'
 where id=1;
 
 INSERT INTO ogpd (name) 
