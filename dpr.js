@@ -166,8 +166,8 @@ try {
       //
 
       // parse platform_id
-      const platform_number = rows[4][5];
-      const platform_id = platforms.find((i) => i.name == platform_number)?.id;
+      const platform = rows[4][5];
+      const platform_id = platforms.find((i) => i.name == platform)?.id;
       if (!platform_id) {
         logger.log(
           `Platform number is not correct in excel file`,
@@ -212,8 +212,50 @@ try {
       // }
       //
 
+      QC: for (let i = 14; i < rows.length; i++) {
+        const row = rows[i];
+        if (row[2] === null) {
+          let errors = [
+            rows[i + 7][6],
+            rows[i + 8][6],
+            rows[i + 9][6],
+            rows[i + 10][6],
+            rows[i + 11][6],
+            rows[i + 12][6],
+            rows[i + 13][6],
+            rows[i + 14][6],
+            rows[i + 15][6],
+            rows[i + 16][6],
+            rows[i + 17][6],
+            rows[i + 18][6],
+            rows[i + 19][6],
+            rows[i + 20][6],
+            rows[i + 21][6],
+            rows[i + 22][6],
+            rows[i + 23][6],
+            rows[i + 24][6],
+            rows[i + 25][6],
+          ];
+
+          errors = errors.map((i) => {
+            return Boolean(i);
+          });
+
+          if (errors.includes(true)) {
+            logger.log(
+              `There is an error in ${field} field - platform ${platform}`,
+              error,
+              false,
+              true
+            );
+            break outer;
+          }
+          break QC;
+        }
+      }
+
       // rename excel file to keep it clean
-      const newFileName = `DPR-${platform_number}-${report_date}.xlsx`;
+      const newFileName = `DPR-${platform}-${report_date}.xlsx`;
       const newFilePath = path.join(path.dirname(filePath), newFileName);
       await fs.rename(filePath, newFilePath);
       //
@@ -242,7 +284,7 @@ try {
       //// populate flowmeters table
       logger.log(`${'-'.repeat(100)}`, 'INFO', true);
       logger.log(
-        `|'Report Date: ${report_date}'|'Platform ${platform_number}'|'flowmeters table'| populating DB...`,
+        `|'Report Date: ${report_date}'|'Platform ${platform}'|'flowmeters table'| populating DB...`,
         'INFO',
         true
       );
@@ -290,20 +332,19 @@ try {
         'INSERT INTO flowmeters (platform_id, report_date_id, reading1, reading2, reading3, reading4, calibration_date) VALUES (@platform_id, @report_date_id, @reading1, @reading2, @reading3, @reading4, @calibration_date)';
 
       if (field_id == 1) {
-        if (![2, 3, 4, 7, 8, 13].includes(platform_number)) {
+        if (![2, 3, 4, 7, 8, 13].includes(platform)) {
           logger.log(`Flowmeter is not present`);
           logger.log(`Not populated!`);
         } else if (
           reading2 == null ||
           reading4 == null ||
-          ([8, 13].includes(platform_number) &&
-            (reading1 == null || reading3 == null))
+          ([8, 13].includes(platform) && (reading1 == null || reading3 == null))
         ) {
           logger.log(`Check flowmeter parameters`, error, false, true);
           logger.log(`Not populated!`, warning);
         } else if (
           flowmeters_previous_entry_is_yesterday &&
-          [8, 13].includes(platform_number) &&
+          [8, 13].includes(platform) &&
           (flowmeters_previous_entry_reading2 != reading1 ||
             flowmeters_previous_entry_reading4 != reading3)
         ) {
@@ -329,7 +370,7 @@ try {
           // check whether today's flowmeter params same as yesterday's (show warning)
           if (
             flowmeters_previous_entry_is_yesterday &&
-            [2, 3, 4, 7].includes(platform_number) &&
+            [2, 3, 4, 7].includes(platform) &&
             (flowmeters_previous_entry_reading2 == reading2 ||
               flowmeters_previous_entry_reading4 == reading4)
           ) {
@@ -363,7 +404,7 @@ try {
           //// populate daily_general_comments table
           // check daily_general_comments entry exists in DB
           const daily_general_comments_entry_exists_query =
-            'SELECT COUNT(*) AS daily_general_comments_entry_exists FROM daily_general_comments WHERE field_id=@field_id AND report_date_id=@report_date_id AND platform_number=@platform_number';
+            'SELECT COUNT(*) AS daily_general_comments_entry_exists FROM daily_general_comments WHERE field_id=@field_id AND report_date_id=@report_date_id AND platform=@platform';
 
           const {
             recordset: daily_general_comments_entry_exists_query_result,
@@ -371,7 +412,7 @@ try {
             .request()
             .input('field_id', field_id)
             .input('report_date_id', report_date_id)
-            .input('platform_number', platform_number)
+            .input('platform', platform)
             .query(daily_general_comments_entry_exists_query);
 
           const { daily_general_comments_entry_exists } =
@@ -380,14 +421,14 @@ try {
 
           // get previous entry from daily_general_comments
           const daily_general_comments_previous_entry_query =
-            'SELECT TOP 1 * FROM daily_general_comments WHERE field_id = @field_id AND platform_number = @platform_number AND report_date_id < @report_date_id ORDER BY report_date_id DESC';
+            'SELECT TOP 1 * FROM daily_general_comments WHERE field_id = @field_id AND platform = @platform AND report_date_id < @report_date_id ORDER BY report_date_id DESC';
 
           const {
             recordset: daily_general_comments_previous_entry_query_result,
           } = await pool
             .request()
             .input('field_id', field_id)
-            .input('platform_number', platform_number)
+            .input('platform', platform)
             .input('report_date_id', report_date_id)
             .query(daily_general_comments_previous_entry_query);
 
@@ -403,7 +444,7 @@ try {
 
           // insert entry into daily_general_comments table
           const daily_general_comments_insert_query =
-            'INSERT INTO daily_general_comments (report_date_id, field_id, platform_number, general_comments) VALUES (@report_date_id, @field_id, @platform_number, @general_comments)';
+            'INSERT INTO daily_general_comments (report_date_id, field_id, platform, general_comments) VALUES (@report_date_id, @field_id, @platform, @general_comments)';
 
           if (
             !Number(daily_general_comments_entry_exists) &&
@@ -413,7 +454,7 @@ try {
               .request()
               .input('report_date_id', report_date_id)
               .input('field_id', field_id)
-              .input('platform_number', platform_number)
+              .input('platform', platform)
               .input('general_comments', general_comments)
               .query(daily_general_comments_insert_query);
             logger.log(`|'daily_general_comments'| Populated!`, success);
@@ -423,41 +464,6 @@ try {
           }
           //
           ////
-
-          let errors = [
-            rows[i + 7][6],
-            rows[i + 8][6],
-            rows[i + 9][6],
-            rows[i + 10][6],
-            rows[i + 11][6],
-            rows[i + 12][6],
-            rows[i + 13][6],
-            rows[i + 14][6],
-            rows[i + 15][6],
-            rows[i + 16][6],
-            rows[i + 17][6],
-            rows[i + 18][6],
-            rows[i + 19][6],
-            rows[i + 20][6],
-            rows[i + 21][6],
-            rows[i + 22][6],
-            rows[i + 23][6],
-            rows[i + 24][6],
-            rows[i + 25][6],
-          ];
-
-          errors = errors.map((i) => {
-            return Boolean(i);
-          });
-
-          if (errors.includes(true)) {
-            logger.log(
-              `There is an error in ${field} field - platform ${platform_number}`,
-              error,
-              false,
-              true
-            );
-          }
           break;
         }
 
@@ -471,7 +477,7 @@ try {
         // check if well name is specified correctly
         if (!well_id) {
           logger.log(
-            `Check |'Platform ${platform_number}'|'row-${
+            `Check |'Platform ${platform}'|'row-${
               i + 1
             }'| Well name is not correct`,
             error,
@@ -479,7 +485,7 @@ try {
             true
           );
           logger.log(
-            `Check |'Platform ${platform_number}'|'row-${
+            `Check |'Platform ${platform}'|'row-${
               i + 1
             }'| Data is not persisted into DB!`,
             warning
@@ -489,7 +495,7 @@ try {
         //
 
         logger.log(
-          `|'Report Date: ${report_date}'|'Platform ${platform_number}'|'Well ${well_number}'| populating DB...`,
+          `|'Report Date: ${report_date}'|'Platform ${platform}'|'Well ${well_number}'| populating DB...`,
           'INFO',
           true
         );
