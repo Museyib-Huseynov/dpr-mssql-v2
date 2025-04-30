@@ -1095,7 +1095,10 @@ try {
             .request()
             .input('well_id', well_id)
             .input('report_date_id', report_date_id)
-            .input('last_gas_well_test_date', last_gas_well_test_date)
+            .input(
+              'last_gas_well_test_date',
+              field_id == 1 ? last_well_test_date : last_gas_well_test_date
+            )
             .input('total_gas', total_gas)
             .input('gaslift_gas', gaslift_gas_wt)
             .query(gas_well_tests_insert_query);

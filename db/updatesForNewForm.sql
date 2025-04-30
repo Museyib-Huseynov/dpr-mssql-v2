@@ -67,6 +67,34 @@ GO
 --
 
 --
+CREATE TABLE gas_well_tests (
+  id INT PRIMARY KEY IDENTITY(1,1),
+  well_id INT NOT NULL,
+  report_date_id INT NOT NULL,
+  well_test_date DATE NOT NULL,
+  total_gas FLOAT,
+  gaslift_gas FLOAT,
+  created_at DATE DEFAULT GETDATE(),
+  CONSTRAINT FK_gwt_wellId FOREIGN KEY (well_id) REFERENCES dbo.wells(id),
+  CONSTRAINT FK_gwt_reportDateId FOREIGN KEY (report_date_id) REFERENCES dbo.report_dates(id),
+  CONSTRAINT UQ_gasWellTest UNIQUE (well_id, well_test_date)
+);
+GO
+
+CREATE INDEX IDX_gwt_wellId ON dbo.gas_well_tests(well_id);
+GO
+
+CREATE INDEX IDX_gwt_reportDateId ON dbo.gas_well_tests(report_date_id);
+GO
+--
+
+--
+INSERT INTO gas_well_tests (well_id, report_date_id, well_test_date, total_gas, gaslift_gas)
+SELECT well_id, report_date_id, well_test_date, total_gas, gaslift_gas
+FROM well_tests
+--
+
+--
 ALTER TABLE well_tests
 DROP COLUMN 
   choke, 
@@ -87,28 +115,6 @@ GO
 ALTER TABLE well_tests
 ADD oil_ton FLOAT,
     water_ton FLOAT;
-GO
---
-
---
-CREATE TABLE gas_well_tests (
-  id INT PRIMARY KEY IDENTITY(1,1),
-  well_id INT NOT NULL,
-  report_date_id INT NOT NULL,
-  well_test_date DATE NOT NULL,
-  total_gas FLOAT,
-  gaslift_gas FLOAT,
-  created_at DATE DEFAULT GETDATE(),
-  CONSTRAINT FK_gwt_wellId FOREIGN KEY (well_id) REFERENCES dbo.wells(id),
-  CONSTRAINT FK_gwt_reportDateId FOREIGN KEY (report_date_id) REFERENCES dbo.report_dates(id),
-  CONSTRAINT UQ_gasWellTest UNIQUE (well_id, well_test_date)
-);
-GO
-
-CREATE INDEX IDX_gwt_wellId ON dbo.gas_well_tests(well_id);
-GO
-
-CREATE INDEX IDX_gwt_reportDateId ON dbo.gas_well_tests(report_date_id);
 GO
 --
 
@@ -213,17 +219,17 @@ SELECT
   ROUND(wt.liquid_ton, 0) AS liquid_ton,
   ROUND(lr.water_cut, 1) AS water_cut,
   CASE
-      WHEN f.name <> 'Günəşli' THEN wt.oil_ton
+      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
   END AS oil_ton,
   CASE 
-      WHEN f.name <> 'Günəşli' THEN wt.oil_ton * (24 - dwp.well_uptime_hours) / 24
+      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton * (24 - dwp.well_uptime_hours) / 24, 0)
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND((wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100))) * (24 - dwp.well_uptime_hours) / 24, 0)
   END AS oil_loss_ton,
   CASE
-      WHEN f.name <> 'Günəşli' THEN wt.water_ton
+      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.water_ton, 0)
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND(wt.liquid_ton * (lr.water_cut / 100) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
   END AS water_ton,
