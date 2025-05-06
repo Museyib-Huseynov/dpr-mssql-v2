@@ -170,6 +170,12 @@ CREATE TABLE daily_general_comments (
   CONSTRAINT UQ_dailyGeneralComments UNIQUE (field_id, platform, report_date_id)
 );
 GO
+
+CREATE INDEX IDX_dgc_reportDateId ON dbo.daily_general_comments(report_date_id);
+GO
+
+CREATE INDEX IDX_dgc_fieldId ON dbo.daily_general_comments(field_id);
+GO
 --
 
 --
@@ -191,7 +197,51 @@ CREATE TABLE daily_operatives (
   CONSTRAINT UQ_dailyOperatives UNIQUE (ogpd_id, report_date_id)
 );
 GO
+
+CREATE INDEX IDX_do_ogpdId ON dbo.daily_operatives(ogpd_id);
+GO
+
+CREATE INDEX IDX_do_reportDateId ON dbo.daily_operatives(report_date_id);
+GO
 --
+
+--
+CREATE TABLE monthly_reported (
+  id INT PRIMARY KEY IDENTITY(1,1),
+  field_id INT NOT NULL,
+  report_date_id INT NOT NULL,
+  produced_oil FLOAT,
+  produced_condensate FLOAT,
+  produced_gas FLOAT,
+  produced_water FLOAT,
+  injected_water FLOAT, 
+  created_at DATE DEFAULT GETDATE(),
+  CONSTRAINT FK_mr_fieldId FOREIGN KEY (field_id) REFERENCES dbo.fields(id),
+  CONSTRAINT FK_mr_reportDateId FOREIGN KEY (report_date_id) REFERENCES dbo.report_dates(id),
+  CONSTRAINT UQ_monthlyReported UNIQUE (field_id, report_date_id)
+);
+GO
+
+CREATE INDEX IDX_mr_fieldId ON dbo.monthly_reported(field_id);
+GO
+
+CREATE INDEX IDX_mr_reportDateId ON dbo.monthly_reported(report_date_id);
+GO
+
+INSERT INTO monthly_reported (field_id, report_date_id, produced_oil, produced_condensate, produced_gas)
+VALUES
+  (1, 397, 264262, 5300, 318128000),
+  (2, 397, 91177, 0, 4786000),
+  (3, 397, 5966, 0, 344000),
+  (1, 425, 219196, 4950, 286915000),
+  (2, 425, 82399, 0, 4302000),
+  (3, 425, 5873, 0, 318000),
+  (1, 456, 247803, 5950, 314625000),
+  (2, 456, 93326, 0, 6008000),
+  (3, 456, 6187, 0, 445000);
+GO
+--
+
 
 --
 DROP TRIGGER IF EXISTS after_laboratory_results_insert;
@@ -222,12 +272,31 @@ SELECT
       WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
-  END AS oil_ton,
+  END AS oil_ton_wellTest,
+  (SELECT mr.produced_oil / (DAY(rd_sub.report_date))
+    FROM monthly_reported mr
+    INNER JOIN report_dates rd_sub ON mr.report_date_id = rd_sub.id
+    WHERE mr.field_id = f.id
+    AND rd_sub.report_date = EOMONTH(rd.report_date)) * 
+  CASE
+      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
+      WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
+      ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
+  END
+  /
+  NULLIF(
+    SUM(
+      CASE
+          WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
+          WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
+          ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
+      END
+    ) OVER (PARTITION BY f.id, rd.report_date), 0) AS allocated_oil_ton,
   CASE 
       WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton * (24 - dwp.well_uptime_hours) / 24, 0)
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
       ELSE ROUND((wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100))) * (24 - dwp.well_uptime_hours) / 24, 0)
-  END AS oil_loss_ton,
+  END AS oil_loss_ton_wellTest,
   CASE
       WHEN f.name <> N'Günəşli' THEN ISNULL(wt.water_ton, 0)
       WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
@@ -322,7 +391,7 @@ LEFT JOIN gas_well_tests as gwt
       SELECT MAX(gwt_sub.report_date_id)
       FROM gas_well_tests AS gwt_sub
       WHERE gwt_sub.well_id = dwp.well_id
-      AND gwt_sub.well_id <= dwp.report_date_id
+      AND gwt_sub.report_date_id <= dwp.report_date_id
     )
 
 LEFT JOIN report_dates AS rd
