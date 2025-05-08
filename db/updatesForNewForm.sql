@@ -1091,12 +1091,17 @@ GO
 
 --
 DELETE FROM horizons
-WHERE id in (1, 4, 5, 6, 14, 15, 16, 17, 20, 21, 23, 24, 25, 26, 27, 28, 29, 32);
+WHERE id in (1, 4, 5, 6, 14, 16, 17, 20, 21, 23, 24, 25, 26, 27, 28, 29, 32);
 GO
 
 UPDATE horizons
 SET oil_density = 0.754
 WHERE name = 'Sabunçu_III' AND field_id = 1
+GO
+
+UPDATE horizons
+SET oil_density = 0.873
+WHERE name = 'BLD_VIII+BLD_VII' AND field_id = 1
 GO
 
 UPDATE horizons
@@ -1166,7 +1171,6 @@ GO
 
 INSERT INTO horizons (name, field_id, oil_density)
 VALUES
-  (N'BLD_VIII+BLD_VII', 1, 0.873),
   (N'BLD_VII', 2, 0.86),
   (N'BLD_VIIa', 2, 0.86),
   (N'BLD_VIII', 2, 0.86),
@@ -1333,4 +1337,3 @@ BEGIN
     WHERE report_date_id = @reportDateId AND (platforms.name = @platform OR @platform IS NULL);
 END;
 GO
---
