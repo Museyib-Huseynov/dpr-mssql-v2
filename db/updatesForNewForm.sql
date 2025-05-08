@@ -227,19 +227,6 @@ GO
 
 CREATE INDEX IDX_mr_reportDateId ON dbo.monthly_reported(report_date_id);
 GO
-
-INSERT INTO monthly_reported (field_id, report_date_id, produced_oil, produced_condensate, produced_gas)
-VALUES
-  (1, 397, 264262, 5300, 318128000),
-  (2, 397, 91177, 0, 4786000),
-  (3, 397, 5966, 0, 344000),
-  (1, 425, 219196, 4950, 286915000),
-  (2, 425, 82399, 0, 4302000),
-  (3, 425, 5873, 0, 318000),
-  (1, 456, 247803, 5950, 314625000),
-  (2, 456, 93326, 0, 6008000),
-  (3, 456, 6187, 0, 445000);
-GO
 --
 
 
@@ -1226,6 +1213,21 @@ VALUES
   (N'QD-4', 3, 0.86),
   (N'QA-1', 3, 0.86),
   (N'QA-3', 3, 0.86);
+GO
+--
+
+--
+INSERT INTO monthly_reported (field_id, report_date_id, produced_oil, produced_condensate, produced_gas)
+VALUES
+  (1, 397, 264262, 5300, 318128000),
+  (2, 397, 91177, 0, 4786000),
+  (3, 397, 5966, 0, 344000),
+  (1, 425, 219196, 4950, 286915000),
+  (2, 425, 82399, 0, 4302000),
+  (3, 425, 5873, 0, 318000),
+  (1, 456, 247803, 5950, 314625000),
+  (2, 456, 93326, 0, 6008000),
+  (3, 456, 6187, 0, 445000);
 GO
 --
 
