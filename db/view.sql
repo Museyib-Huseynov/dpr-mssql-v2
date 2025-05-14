@@ -9,7 +9,10 @@ CREATE VIEW complete_table AS
 SELECT 
   rd.report_date AS report_date,
   f.name AS field,
-  COALESCE(p.name, '') +' / ' + COALESCE(p.square, '') AS "platform / square",
+  CASE
+        WHEN p.square IS NULL OR p.square = '' THEN p.name
+        ELSE p.name + ' / ' + p.square
+      END AS platform,
   w.name AS well,
   wsc.name AS well_stock_category,
   pwssc.name AS production_well_stock_sub_category,
