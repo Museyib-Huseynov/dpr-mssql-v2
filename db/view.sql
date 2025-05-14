@@ -1,3 +1,11 @@
+use dpr;
+GO
+
+DROP VIEW complete_table;
+GO
+
+CREATE VIEW complete_table AS
+
 SELECT 
   rd.report_date AS report_date,
   f.name AS field,
