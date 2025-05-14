@@ -11,21 +11,19 @@ SELECT
   dwp.well_uptime_hours AS well_uptime_hours,
   ROUND(wt.liquid_ton, 0) AS liquid_ton,
   ROUND(lr.water_cut, 1) AS water_cut,
-  CASE
-      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
-      WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
-      ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
-  END AS oil_ton_wellTest,
-  CASE 
-      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton * (24 - dwp.well_uptime_hours) / 24, 0)
-      WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
-      ELSE ROUND((wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100))) * (24 - dwp.well_uptime_hours) / 24, 0)
-  END AS oil_loss_ton_wellTest,
-  CASE
-      WHEN f.name <> N'Günəşli' THEN ISNULL(wt.water_ton, 0)
-      WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
-      ELSE ROUND(wt.liquid_ton * (lr.water_cut / 100) / (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
-  END AS water_ton,
+  oil_ton_calc AS oil_ton_wellTest,
+  (
+    SELECT mr.produced_oil / DAY(rd_sub.report_date)
+    FROM monthly_reported mr
+    INNER JOIN report_dates rd_sub ON mr.report_date_id = rd_sub.id
+    WHERE mr.field_id = f.id AND rd_sub.report_date = EOMONTH(rd.report_date)
+  ) * 
+  oil_ton_calc /
+  NULLIF(
+    SUM(oil_ton_calc) OVER (PARTITION BY f.id, rd.report_date), 0
+  ) AS allocated_oil_ton,
+  ISNULL(oil_ton_calc * (24 - dwp.well_uptime_hours) / 24, 0) AS oil_loss_ton_wellTest,
+  water_ton_calc AS water_ton,
   ROUND(gwt.total_gas, 0) AS total_gas,
   ROUND(gwt.gaslift_gas, 0) AS gaslift_gas,
   ROUND((gwt.total_gas - gwt.gaslift_gas) * dwp.well_uptime_hours / 24, 0) AS produced_gas,
@@ -112,7 +110,6 @@ OUTER APPLY (
   ORDER BY gwt_sub.report_date_id DESC
 ) gwt
 
-
 LEFT JOIN report_dates AS rd
     ON dwp.report_date_id = rd.id
 
@@ -138,4 +135,25 @@ LEFT JOIN horizons AS h
     ON c.horizon_id = h.id
 
 LEFT JOIN production_sub_skins_activities AS pssa
-    ON wdr.production_sub_skins_activity_id = pssa.id;
+    ON wdr.production_sub_skins_activity_id = pssa.id
+
+CROSS APPLY (
+  SELECT
+    oil_ton_calc =
+      CASE
+          WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
+          WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
+          ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) /
+              (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
+      END,
+
+    water_ton_calc =
+      CASE
+          WHEN f.name <> N'Günəşli' THEN ISNULL(wt.water_ton, 0)
+          WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
+          ELSE ROUND(wt.liquid_ton * (lr.water_cut / 100) /
+              (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
+      END
+) AS calc
+
+
