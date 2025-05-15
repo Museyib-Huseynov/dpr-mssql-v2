@@ -18,10 +18,17 @@ SELECT
   pwssc.name AS production_well_stock_sub_category,
   pm.name AS production_method,
   h.name AS horizon,
+  c.completion_interval AS completion_interval,
+  c.casing AS casing,
+  c.tubing1_depth AS tubing1_depth,
+  c.tubing1_length AS tubing1_length,
+  c.tubing2_depth AS tubing2_depth,
+  c.tubing2_length AS tubing2_length,
+  c.tubing3_depth AS tubing3_depth,
+  c.tubing3_length AS tubing3_length,
   dwp.flowmeter AS flowmeter,
   dwp.well_uptime_hours AS well_uptime_hours,
   ROUND(wt.liquid_ton, 0) AS liquid_ton,
-  ROUND(lr.water_cut, 1) AS water_cut,
   oil_ton_calc AS oil_ton_wellTest,
   (
     SELECT mr.produced_oil / DAY(rd_sub.report_date)
@@ -32,7 +39,7 @@ SELECT
   oil_ton_calc /
   NULLIF(
     SUM(oil_ton_calc) OVER (PARTITION BY f.id, rd.report_date), 0
-  ) AS allocated_oil_ton,
+  ) AS oil_ton_allocated,
   ISNULL(oil_ton_calc * (24 - dwp.well_uptime_hours) / 24, 0) AS oil_loss_ton_wellTest,
   water_ton_calc AS water_ton,
   ROUND(gwt.total_gas, 0) AS total_gas,
