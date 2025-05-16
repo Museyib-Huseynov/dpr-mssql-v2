@@ -28,7 +28,7 @@ SELECT
   c.tubing3_length AS tubing3_length,
   dwp.flowmeter AS flowmeter,
   dwp.well_uptime_hours AS well_uptime_hours,
-  ROUND(wt.liquid_ton, 0) AS liquid_ton,
+  ISNULL(ROUND((wt.liquid_ton / 24) * dwp.well_uptime_hours, 0), 0)  AS liquid_ton,
   oil_ton_calc AS oil_ton_wellTest,
   (
     SELECT mr.produced_oil / DAY(rd_sub.report_date)
@@ -40,10 +40,10 @@ SELECT
   NULLIF(
     SUM(oil_ton_calc) OVER (PARTITION BY f.id, rd.report_date), 0
   ) AS oil_ton_allocated,
-  ISNULL(oil_ton_calc * (24 - dwp.well_uptime_hours) / 24, 0) AS oil_loss_ton_wellTest,
+  ISNULL(oil_ton_calc * (24 - dwp.well_uptime_hours) / dwp.well_uptime_hours, 0) AS oil_loss_ton_wellTest,
   water_ton_calc AS water_ton,
-  ROUND(gwt.total_gas, 0) AS total_gas,
-  ROUND(gwt.gaslift_gas, 0) AS gaslift_gas,
+  ROUND(((gwt.total_gas / 24) * dwp.well_uptime_hours), 0) AS total_gas,
+  ROUND((gwt.gaslift_gas / 24) * dwp.well_uptime_hours, 0) AS gaslift_gas,
   ROUND((gwt.total_gas - gwt.gaslift_gas) * dwp.well_uptime_hours / 24, 0) AS produced_gas,
   ROUND(lr.mechanical_impurities, 1) AS mechanical_impurities,
   dwp.pqa AS Pqa,
@@ -159,18 +159,18 @@ CROSS APPLY (
   SELECT
     oil_ton_calc =
       CASE
-          WHEN f.name <> N'Günəşli' THEN ISNULL(wt.oil_ton, 0)
+          WHEN f.name <> N'Günəşli' THEN ISNULL(((wt.oil_ton / 24) * dwp.well_uptime_hours), 0)
           WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
-          ELSE ROUND(wt.liquid_ton * h.oil_density * (1 - (lr.water_cut / 100)) /
-              (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
+          ELSE ISNULL(ROUND(((wt.liquid_ton / 24) * dwp.well_uptime_hours) * h.oil_density * (1 - (lr.water_cut / 100)) /
+              (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0), 0) 
       END,
 
     water_ton_calc =
       CASE
-          WHEN f.name <> N'Günəşli' THEN ISNULL(wt.water_ton, 0)
+          WHEN f.name <> N'Günəşli' THEN ISNULL(((wt.water_ton / 24) * dwp.well_uptime_hours), 0)
           WHEN h.oil_density = 0 AND lr.water_cut = 0 THEN 0
-          ELSE ROUND(wt.liquid_ton * (lr.water_cut / 100) /
-              (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0)
+          ELSE ISNULL(ROUND(((wt.liquid_ton / 24) * dwp.well_uptime_hours) * (lr.water_cut / 100) /
+              (h.oil_density * (1 - (lr.water_cut / 100)) + (lr.water_cut / 100)), 0), 0) 
       END
 ) AS calc
 
