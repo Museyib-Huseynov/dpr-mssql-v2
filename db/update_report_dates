@@ -1,0 +1,161 @@
+-- check which tables uses report_dates as foreign_key
+SELECT 
+    fk.name AS foreign_key_name,
+    OBJECT_NAME(fk.parent_object_id) AS referencing_table
+FROM sys.foreign_keys fk
+JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+WHERE fkc.referenced_object_id = OBJECT_ID('report_dates');
+GO
+--
+
+-- drop constraints
+ALTER TABLE flowmeters
+DROP CONSTRAINT FK_f_reportDateId;
+GO
+
+ALTER TABLE laboratory_results
+DROP CONSTRAINT FK_lr_reportDateId;
+GO
+
+ALTER TABLE well_downtime_reasons
+DROP CONSTRAINT FK_wdr_reportDateId;
+GO
+
+ALTER TABLE well_stock
+DROP CONSTRAINT FK_ws_reportDateId;
+GO
+
+ALTER TABLE well_tests
+DROP CONSTRAINT FK_wt_reportDateId;
+GO
+
+ALTER TABLE gas_well_tests
+DROP CONSTRAINT FK_gwt_reportDateId;
+GO
+
+ALTER TABLE daily_general_comments
+DROP CONSTRAINT FK_dgc_reportDateId;
+GO
+
+ALTER TABLE daily_operatives
+DROP CONSTRAINT FK_do_reportDateId;
+GO
+
+ALTER TABLE monthly_reported
+DROP CONSTRAINT FK_mr_reportDateId;
+GO
+
+ALTER TABLE completions
+DROP CONSTRAINT FK_c_reportDateId;
+GO
+
+ALTER TABLE daily_well_parameters
+DROP CONSTRAINT FK_dwp_reportDateId;
+GO
+--
+
+-- delete report_dates (reset)
+TRUNCATE TABLE report_dates;
+GO
+--
+
+-- populate report_dates
+DECLARE @start_date DATE = '2015-01-01';
+DECLARE @end_date DATE = '2030-01-01';
+
+WHILE @start_date <= @end_date
+BEGIN
+    INSERT INTO report_dates (report_date) VALUES (@start_date);
+    SET @start_date = DATEADD(DAY, 1, @start_date);
+END
+GO
+--
+
+-- update referencing tables
+BEGIN TRANSACTION
+
+DECLARE @days_to_shift INT;
+SET @days_to_shift = DATEDIFF(DAY, '2015-01-01', '2024-01-01');
+
+UPDATE flowmeters
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE laboratory_results
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE well_downtime_reasons
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE well_stock
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE well_tests
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE gas_well_tests
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE daily_general_comments
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE daily_operatives
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE monthly_reported
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE completions
+SET report_date_id = report_date_id + @days_to_shift;
+
+UPDATE daily_well_parameters
+SET report_date_id = report_date_id + @days_to_shift;
+
+COMMIT;
+GO
+--
+
+-- restore constraints
+ALTER TABLE flowmeters
+ADD CONSTRAINT FK_f_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE laboratory_results
+ADD CONSTRAINT FK_lr_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE well_downtime_reasons
+ADD CONSTRAINT FK_wdr_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE well_stock
+ADD CONSTRAINT FK_ws_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE well_tests
+ADD CONSTRAINT FK_wt_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE gas_well_tests
+ADD CONSTRAINT FK_gwt_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO 
+
+ALTER TABLE daily_general_comments
+ADD CONSTRAINT FK_dgc_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE daily_operatives
+ADD CONSTRAINT FK_do_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE monthly_reported
+ADD CONSTRAINT FK_mr_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE completions
+ADD CONSTRAINT FK_c_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+
+ALTER TABLE daily_well_parameters
+ADD CONSTRAINT FK_dwp_reportDateId FOREIGN KEY (report_date_id) REFERENCES report_dates(id);
+GO
+--
