@@ -31,7 +31,7 @@ SELECT
   ISNULL(ROUND((wt.liquid_ton / 24) * dwp.well_uptime_hours, 0), 0)  AS liquid_ton,
   oil_ton_calc AS oil_ton_wellTest,
   (
-    SELECT mr.produced_oil / DAY(rd_sub.report_date)
+    SELECT mr.MonthlyOilProduction / DAY(rd_sub.report_date)
     FROM monthly_reported mr
     INNER JOIN report_dates rd_sub ON mr.report_date_id = rd_sub.id
     WHERE mr.field_id = f.id AND rd_sub.report_date = EOMONTH(rd.report_date)
