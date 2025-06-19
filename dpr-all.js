@@ -553,6 +553,8 @@ try {
             }
             //
 
+            const missing_data = ['y', 'Y'];
+
             const liquid_ton = row[20];
             const oil_ton = row[21];
             const water_ton = row[22];
@@ -560,35 +562,77 @@ try {
             const gaslift_gas_wt = row[25];
             const water_cut = row[27];
             const mechanical_impurities = row[28];
-            const pqa = row[29];
-            const phf = row[30];
-            const pba = row[31];
-            const p6x9 = row[32];
-            const p9x13 = row[33];
-            const p13x20 = row[34];
-            const choke = row[35];
-            const gaslift_gas_day = row[36];
-            const gaslift_system_pressure = row[37];
-            const pump_depth = row[38];
-            const pump_frequency = row[39];
-            const pump_hydrostatic_pressure = row[40];
-            const esp_pump_size = row[41];
-            const esp_pump_stages = row[42];
-            const esp_pump_rate = row[43];
-            const esp_pump_head = row[44];
-            const esp_downhole_gas_separator = row[45];
-            const srp_pumpjack_type = row[46];
-            const srp_pump_plunger_diameter = row[47];
-            const srp_plunger_stroke_length = row[48];
-            const srp_balancer_oscillation_frequency = row[49];
-            const srp_pump_rate_coefficient = row[50];
-            const srp_max_motor_speed = row[51];
-            const srp_shaft_diameter = row[52];
-            const pcp_pump_rate = row[53];
-            const pcp_rpm = row[54];
-            const pcp_screw_diameter = row[55];
-            const static_fluid_level = row[56];
-            const dynamic_fluid_level = row[57];
+            const pqa = missing_data.includes(row[29]) ? null : row[29];
+            const phf = missing_data.includes(row[30]) ? null : row[30];
+            const pba = missing_data.includes(row[31]) ? null : row[31];
+            const p6x9 = missing_data.includes(row[32]) ? null : row[32];
+            const p9x13 = missing_data.includes(row[33]) ? null : row[33];
+            const p13x20 = missing_data.includes(row[34]) ? null : row[34];
+            const choke = missing_data.includes(row[35]) ? null : row[35];
+            const gaslift_gas_day = missing_data.includes(row[36])
+              ? null
+              : row[36];
+            const gaslift_system_pressure = missing_data.includes(row[37])
+              ? null
+              : row[37];
+            const pump_depth = missing_data.includes(row[38]) ? null : row[38];
+            const pump_frequency = missing_data.includes(row[39])
+              ? null
+              : row[39];
+            const pump_hydrostatic_pressure = missing_data.includes(row[40])
+              ? null
+              : row[40];
+            const esp_pump_size = missing_data.includes(row[41])
+              ? null
+              : row[41];
+            const esp_pump_stages = missing_data.includes(row[42])
+              ? null
+              : row[42];
+            const esp_pump_rate = missing_data.includes(row[43])
+              ? null
+              : row[43];
+            const esp_pump_head = missing_data.includes(row[44])
+              ? null
+              : row[44];
+            const esp_downhole_gas_separator = missing_data.includes(row[45])
+              ? null
+              : row[45];
+            const srp_pumpjack_type = missing_data.includes(row[46])
+              ? null
+              : row[46];
+            const srp_pump_plunger_diameter = missing_data.includes(row[47])
+              ? null
+              : row[47];
+            const srp_plunger_stroke_length = missing_data.includes(row[48])
+              ? null
+              : row[48];
+            const srp_balancer_oscillation_frequency = missing_data.includes(
+              row[49]
+            )
+              ? null
+              : row[49];
+            const srp_pump_rate_coefficient = missing_data.includes(row[50])
+              ? null
+              : row[50];
+            const srp_max_motor_speed = missing_data.includes(row[51])
+              ? null
+              : row[51];
+            const srp_shaft_diameter = missing_data.includes(row[52])
+              ? null
+              : row[52];
+            const pcp_pump_rate = missing_data.includes(row[53])
+              ? null
+              : row[53];
+            const pcp_rpm = missing_data.includes(row[54]) ? null : row[54];
+            const pcp_screw_diameter = missing_data.includes(row[55])
+              ? null
+              : row[55];
+            const static_fluid_level = missing_data.includes(row[56])
+              ? null
+              : row[56];
+            const dynamic_fluid_level = missing_data.includes(row[57])
+              ? null
+              : row[57];
             const well_uptime_hours = row[58];
             const downtime_category = row[59];
             const production_sub_skins_activity_id =
