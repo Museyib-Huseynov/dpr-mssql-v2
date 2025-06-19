@@ -11,7 +11,7 @@ import officeCrypto from 'officecrypto-tool';
 import readXlsxFile from 'read-excel-file/node';
 
 const inputFolder = process.argv[2] || './';
-const password = 'gun123';
+const password = 'nd123';
 
 //// generate logger function to log to console and local file
 if (!existsSync('./logs')) {
@@ -100,7 +100,7 @@ try {
   logger.log('SCRIPT EXECUTION STARTED...', 'INFO', true);
 
   pool = await mssql.connect(
-    'Server=localhost,1433;Database=dpr;User Id=museyib;Password=3231292;Encrypt=false'
+    'Server=localhost,1433;Database=dpr_11;User Id=museyib;Password=3231292;Encrypt=false'
   );
 
   const { recordset: fields } = await pool
@@ -232,9 +232,6 @@ try {
             rows[i + 20][6],
             rows[i + 21][6],
             rows[i + 22][6],
-            rows[i + 23][6],
-            rows[i + 24][6],
-            rows[i + 25][6],
           ];
 
           errors = errors.map((i) => {
