@@ -94,6 +94,8 @@ const logger = {
 };
 ////
 
+const missing_data = ['y', 'Y'];
+
 let pool;
 try {
   logger.log(`${'*'.repeat(100)}`, 'INFO', true);
@@ -553,8 +555,6 @@ try {
             }
             //
 
-            const missing_data = ['y', 'Y'];
-
             const liquid_ton = row[20];
             const oil_ton = row[21];
             const water_ton = row[22];
@@ -632,8 +632,11 @@ try {
               : row[56];
             const dynamic_fluid_level = missing_data.includes(row[57])
               ? null
-              : row[57];
-            const well_uptime_hours = row[58];
+              : +row[57];
+
+            const well_uptime_hours = missing_data.includes(row[58])
+              ? null
+              : row[58];
             const downtime_category = row[59];
             const production_sub_skins_activity_id =
               production_sub_skins_activities.find(
@@ -1041,7 +1044,7 @@ try {
 
             // insert entry into daily_well_parameters table
             const daily_well_parameters_insert_query =
-              'INSERT INTO daily_well_parameters (well_id, report_date_id, flowmeter, well_uptime_hours, choke, pqa, phf, pba, p6x9, p9x13, p13x20, gaslift_gas, pump_depth, pump_frequency, pump_hydrostatic_pressure, esp_pump_size, esp_pump_stages, esp_pump_rate, esp_pump_head, esp_downhole_gas_separator, srp_pumpjack_type, srp_pump_plunger_diameter, srp_plunger_stroke_length, srp_balancer_oscillation_frequency, srp_pump_rate_coefficient, srp_max_motor_speed, srp_shaft_diameter, pcp_pump_rate, pcp_rpm, pcp_screw_diameter, static_fluid_level, dynamic_fluid_level, responsible_person, phone_number) VALUES (@well_id, @report_date_id, @flowmeter, @well_uptime_hours, @choke, @pqa, @phf, @pba, @p6x9, @p9x13, @p13x20, @gaslift_gas, @pump_depth, @pump_frequency, @pump_hydrostatic_pressure, @esp_pump_size, @esp_pump_stages, @esp_pump_rate, @esp_pump_head, @esp_downhole_gas_separator, @srp_pumpjack_type, @srp_pump_plunger_diameter, @srp_plunger_stroke_length, @srp_balancer_oscillation_frequency, @srp_pump_rate_coefficient, @srp_max_motor_speed, @srp_shaft_diameter, @pcp_pump_rate, @pcp_rpm, @pcp_screw_diameter, @static_fluid_level, @dynamic_fluid_level, @responsible_person, @phone_number)';
+              'INSERT INTO daily_well_parameters (well_id, report_date_id, flowmeter, well_uptime_hours, choke, pqa, phf, pba, p6x9, p9x13, p13x20, gaslift_gas, gaslift_system_pressure, pump_depth, pump_frequency, pump_hydrostatic_pressure, esp_pump_size, esp_pump_stages, esp_pump_rate, esp_pump_head, esp_downhole_gas_separator, srp_pumpjack_type, srp_pump_plunger_diameter, srp_plunger_stroke_length, srp_balancer_oscillation_frequency, srp_pump_rate_coefficient, srp_max_motor_speed, srp_shaft_diameter, pcp_pump_rate, pcp_rpm, pcp_screw_diameter, static_fluid_level, dynamic_fluid_level, responsible_person, phone_number) VALUES (@well_id, @report_date_id, @flowmeter, @well_uptime_hours, @choke, @pqa, @phf, @pba, @p6x9, @p9x13, @p13x20, @gaslift_gas, @gaslift_system_pressure, @pump_depth, @pump_frequency, @pump_hydrostatic_pressure, @esp_pump_size, @esp_pump_stages, @esp_pump_rate, @esp_pump_head, @esp_downhole_gas_separator, @srp_pumpjack_type, @srp_pump_plunger_diameter, @srp_plunger_stroke_length, @srp_balancer_oscillation_frequency, @srp_pump_rate_coefficient, @srp_max_motor_speed, @srp_shaft_diameter, @pcp_pump_rate, @pcp_rpm, @pcp_screw_diameter, @static_fluid_level, @dynamic_fluid_level, @responsible_person, @phone_number)';
 
             if (!Number(daily_well_parameters_entry_exists)) {
               await pool
@@ -1061,6 +1064,7 @@ try {
                   'gaslift_gas',
                   (gaslift_gas_day / 24) * well_uptime_hours
                 )
+                .input('gaslift_system_pressure', gaslift_system_pressure)
                 .input('pump_depth', pump_depth)
                 .input('pump_frequency', pump_frequency)
                 .input('pump_hydrostatic_pressure', pump_hydrostatic_pressure)
