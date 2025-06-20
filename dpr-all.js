@@ -272,11 +272,11 @@ try {
           //
 
           // parse flowmeter params
-          const reading1 = rows[3][62];
-          const reading2 = rows[4][62];
+          const reading1 = rows[3][61];
+          const reading2 = rows[4][61];
           const reading3 = rows[3][63];
           const reading4 = rows[4][63];
-          let calibration_date = rows[6][63];
+          let calibration_date = rows[6][61];
           if (isValidDate(calibration_date)) {
             calibration_date = processDateValue(calibration_date);
           } else {
