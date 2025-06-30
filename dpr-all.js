@@ -476,9 +476,12 @@ try {
             let validation_error = false;
 
             const well_number = row[4];
-            const well_id = wells.find(
-              (i) => i.name.trim() == String(well_number).trim()
-            )?.id;
+            const well_id = wells.find((i) => {
+              return (
+                i.name.trim() == String(well_number).trim() &&
+                i.platform_id == platform_id
+              );
+            })?.id;
 
             // check if well name is specified correctly
             if (!well_id) {
