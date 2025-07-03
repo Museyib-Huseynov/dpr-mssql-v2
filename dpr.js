@@ -247,7 +247,7 @@ try {
               false,
               true
             );
-            break outer;
+            continue outer;
           }
           break QC;
         }
@@ -794,8 +794,10 @@ try {
         //
 
         // insert entry into well_stock table
+        const well_stock_sub_category_id = 1;
+
         const well_stock_insert_query =
-          'INSERT INTO well_stock (well_id, report_date_id, well_stock_category_id, production_well_stock_sub_category_id, production_method_id) VALUES (@well_id, @report_date_id, @well_stock_category_id, @production_well_stock_sub_category_id, @production_method_id)';
+          'INSERT INTO well_stock (well_id, report_date_id, well_stock_category_id, well_stock_sub_category_id, production_well_stock_sub_category_id, production_method_id) VALUES (@well_id, @report_date_id, @well_stock_category_id, @well_stock_sub_category_id, @production_well_stock_sub_category_id, @production_method_id)';
 
         const well_stock_changed =
           well_stock_previous_entry_well_stock_category_id !=
@@ -811,6 +813,7 @@ try {
             .input('well_id', well_id)
             .input('report_date_id', report_date_id)
             .input('well_stock_category_id', well_stock_category_id)
+            .input('well_stock_sub_category_id', well_stock_sub_category_id)
             .input(
               'production_well_stock_sub_category_id',
               production_well_stock_sub_category_id
