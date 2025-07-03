@@ -157,34 +157,41 @@ try {
           const rows = await readXlsxFile(output, { sheet: 'Hesabat forması' });
 
           // parse field_id
-          const field = rows[3][5];
-          const field_id = fields.find((i) => i.name == field)?.id;
-          if (!field_id) {
-            logger.log(
-              'Field name is not correct in excel file',
-              error,
-              false,
-              true
-            );
-            logger.log(`Data is not persisted into DB!`, warning);
-            continue outer;
+          let field, field_id;
+          if (rows[3][5] != 'LTS') {
+            field = rows[3][5];
+
+            field_id = fields.find((i) => i.name == field)?.id;
+            if (!field_id) {
+              logger.log(
+                'Field name is not correct in excel file',
+                error,
+                false,
+                true
+              );
+              logger.log(`Data is not persisted into DB!`, warning);
+              continue outer;
+            }
           }
           //
 
           // parse platform_id
-          const platform = rows[4][5];
-          const platform_id = platforms.find((i) => {
-            return i.name == platform && i.field_id == field_id;
-          })?.id;
-          if (!platform_id) {
-            logger.log(
-              `Platform number is not correct in excel file`,
-              error,
-              false,
-              true
-            );
-            logger.log(`Data is not persisted into DB!`, warning);
-            continue outer;
+          let platform, platform_id;
+          if (rows[3][5] != 'LTS') {
+            platform = rows[4][5];
+            platform_id = platforms.find((i) => {
+              return i.name == platform && i.field_id == field_id;
+            })?.id;
+            if (!platform_id) {
+              logger.log(
+                `Platform number is not correct in excel file`,
+                error,
+                false,
+                true
+              );
+              logger.log(`Data is not persisted into DB!`, warning);
+              continue outer;
+            }
           }
           //
 
@@ -474,6 +481,21 @@ try {
             }
 
             let validation_error = false;
+
+            if (rows[3][5] == 'LTS') {
+              if (row[2] == '3') {
+                field = 'Palçıq Pilpiləsi';
+              } else {
+                field = 'Neft Daşları';
+              }
+
+              field_id = fields.find((i) => i.name == field)?.id;
+
+              platform = row[2];
+              platform_id = platforms.find((i) => {
+                return i.name == platform && i.field_id == field_id;
+              })?.id;
+            }
 
             const well_number = row[4];
             const well_id = wells.find((i) => {
