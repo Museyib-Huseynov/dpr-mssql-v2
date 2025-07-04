@@ -512,10 +512,6 @@ try {
 
         // check if well name is specified correctly
         if (!well_id) {
-          console.log(111111111, well_number);
-          console.log('s', square);
-          console.log('platform', platform);
-          console.log('p', platform_id);
           logger.log(
             `Check |'Platform ${platform}'|'row-${
               i + 1

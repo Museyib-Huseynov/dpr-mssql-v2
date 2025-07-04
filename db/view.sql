@@ -30,6 +30,7 @@ SELECT
   dwp.well_uptime_hours AS well_uptime_hours,
   ISNULL(ROUND((wt.liquid_ton / 24) * dwp.well_uptime_hours, 0), 0)  AS liquid_ton,
   oil_ton_calc AS oil_ton_wellTest,
+  lr.water_cut AS water_cut,
   (
     SELECT mr.MonthlyOilProduction / DAY(rd_sub.report_date)
     FROM monthly_reported mr
