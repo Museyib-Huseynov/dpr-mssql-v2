@@ -177,7 +177,7 @@ try {
 
           // parse platform_id
           let platform, platform_id;
-          if (rows[3][5] != 'LTS') {
+          if (rows[2][5] == '28 May') {
             platform = rows[4][5];
             platform_id = platforms.find((i) => {
               return i.name == platform && i.field_id == field_id;
@@ -192,6 +192,8 @@ try {
               logger.log(`Data is not persisted into DB!`, warning);
               continue outer;
             }
+          } else if (rows[3][5] != 'LTS') {
+            platform = rows[4][5];
           }
           //
 
@@ -490,10 +492,21 @@ try {
               }
 
               field_id = fields.find((i) => i.name == field)?.id;
+            }
 
-              platform = row[2];
+            let square = row[3];
+
+            if (rows[2][5] != '28 May') {
+              if (rows[3][5] == 'LTS') {
+                platform = row[2];
+              }
+
               platform_id = platforms.find((i) => {
-                return i.name == platform && i.field_id == field_id;
+                return (
+                  i.name == platform &&
+                  i.field_id == field_id &&
+                  i.square == square
+                );
               })?.id;
             }
 
