@@ -596,25 +596,25 @@ try {
         const mechanical_impurities = +String(row[28]).replace(/,/g, '.');
         const pqa = missing_data.includes(row[29])
           ? null
-          : +String(row[29]).replace(/,/g, '.');
+          : String(row[29]).replace(/,/g, '.');
         const phf = missing_data.includes(row[30])
           ? null
-          : +String(row[30]).replace(/,/g, '.');
+          : String(row[30]).replace(/,/g, '.');
         const pba = missing_data.includes(row[31])
           ? null
-          : +String(row[31]).replace(/,/g, '.');
+          : String(row[31]).replace(/,/g, '.');
         const p6x9 = missing_data.includes(row[32])
           ? null
-          : +String(row[32]).replace(/,/g, '.');
+          : String(row[32]).replace(/,/g, '.');
         const p9x13 = missing_data.includes(row[33])
           ? null
-          : +String(row[33]).replace(/,/g, '.');
+          : String(row[33]).replace(/,/g, '.');
         const p13x20 = missing_data.includes(row[34])
           ? null
-          : +String(row[34]).replace(/,/g, '.');
+          : String(row[34]).replace(/,/g, '.');
         const choke = missing_data.includes(row[35])
           ? null
-          : +String(row[35]).replace(/,/g, '.');
+          : String(row[35]).replace(/,/g, '.');
         const gaslift_gas_day = missing_data.includes(row[36])
           ? null
           : +String(row[36]).replace(/,/g, '.');
