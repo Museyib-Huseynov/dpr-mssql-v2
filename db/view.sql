@@ -41,7 +41,7 @@ SELECT
   NULLIF(
     SUM(oil_ton_calc) OVER (PARTITION BY f.id, rd.report_date), 0
   ) AS oil_ton_allocated,
-  ISNULL(oil_ton_calc * (24 - dwp.well_uptime_hours) / NULLIF(dwp.well_uptime_hours, 0), 0) AS oil_loss_ton_wellTest,
+  wt.liquid_ton * ((100 - lr.water_cut) / 100) * (24 - dwp.well_uptime_hours) / 24 AS oil_loss_ton_wellTest,
   water_ton_calc AS water_ton,
   ROUND(((gwt.total_gas / 24) * dwp.well_uptime_hours), 0) AS total_gas,
   ROUND((gwt.gaslift_gas / 24) * dwp.well_uptime_hours, 0) AS gaslift_gas,
